@@ -31,11 +31,14 @@ class converter_obj:
             self.mesh = self.mesh.apply_translation(translation_matrix)
 
         def check_position(self, point_coordinates):                            # Check the 3D point if it is inside the model
-            ret = self.mesh.contains(np.array([point_coordinates]))
-            if ret[0]:
+            try:
+                ret = self.mesh.contains(np.array([point_coordinates]))
+                if ret[0]:
+                    print("3D point is inside the model")
+                else:
+                    print("3D point is outside the model")
+            except:
                 print("3D point is inside the model")
-            else:
-                print("3D point is outside the model")
 
         def plot_Model(self):                                                   # 3D plotting
             self.mesh.show()
@@ -49,8 +52,8 @@ if __name__ == "__main__":
     ap.add_argument("-i","--inputPath", required=True, help="Input file path")
     ap.add_argument("-o","--outputPath", required=True, help="Output file path" )
     ap.add_argument("-s","--scaleRate", required=False, help="Scale rate description", type=float)
-    ap.add_argument("-tf","--transformationMatrix", required=False, help="Transformation matrix (it must be 4x4 matrix)", type=float)
-    ap.add_argument("-tl","--translationMatrix", required=False, help="Translation matrix", type=float)
+    ap.add_argument("-tf","--transformationMatrix", required=False, help="Transformation matrix (it must be 4x4 matrix)", type=str)
+    ap.add_argument("-tl","--translationMatrix", required=False, help="Translation matrix", type=str)
     ap.add_argument("-p","--pointCoordinates", required=False, help="X,Y,Z coordinates of 3D point, eg 1,2,3", type=str)
 
     args = vars(ap.parse_args())
@@ -61,17 +64,17 @@ if __name__ == "__main__":
     obj.print_surfaceArea()
     obj.print_volume()
 
+    if(args["transformationMatrix"] is not None):
+        arrTF = np.array(args["transformationMatrix"].split(","), dtype=float)
+        arrTF = arrTF.reshape(4,4)
+        obj.apply_transformation(arrTF)
+    if(args["translationMatrix"] is not None):
+        arrTL = np.array(args["translationMatrix"].split(","), dtype=float)
+        obj.apply_translation(arrTL)
+    if(args["pointCoordinates"] is not None):
+        arrP = np.array(args["pointCoordinates"].split(","), dtype=float)
+        obj.check_position(arrP)
     if(args["scaleRate"] is not None):
         obj.apply_scale(args["scaleRate"])
-    if(args["transformationMatrix"] is not None):
-        obj.apply_transformation(args["transformationMatrix"])
-    if(args["translationMatrix"] is not None):
-        obj.apply_translation(args["translationMatrix"])
-    if(args["pointCoordinates"] is not None):
-        coordinates = args["pointCoordinates"].split(",")
-        arr = np.array([])
-        for i in range(len(coordinates)):
-            arr = np.append(arr, float(coordinates[i]))
-        obj.check_position(arr)
 
     obj.create_binaryStl()
